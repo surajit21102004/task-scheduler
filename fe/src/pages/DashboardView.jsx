@@ -13,14 +13,14 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-const DashboardView = ({ setCurrentView, openDailyUpdateModal }) => {
+const DashboardView = ({ setCurrentView, openDailyUpdateModal, refreshKey }) => {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardSummary();
-  }, []);
+  }, [refreshKey]);
 
   const fetchDashboardSummary = async () => {
     try {

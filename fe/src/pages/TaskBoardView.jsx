@@ -16,7 +16,7 @@ import {
   Eye,
 } from 'lucide-react';
 
-const TaskBoardView = ({ openTaskModal, setSelectedTaskForChat, setSelectedTaskForDetail, isMyAssignedOnly = false }) => {
+const TaskBoardView = ({ openTaskModal, setSelectedTaskForChat, setSelectedTaskForDetail, isMyAssignedOnly = false, refreshKey }) => {
   const { user, hasPermission } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,7 @@ const TaskBoardView = ({ openTaskModal, setSelectedTaskForChat, setSelectedTaskF
 
   useEffect(() => {
     fetchTasks();
-  }, [search, priorityFilter, isMyAssignedOnly]);
+  }, [search, priorityFilter, isMyAssignedOnly, refreshKey]);
 
   const fetchTasks = async () => {
     setLoading(true);

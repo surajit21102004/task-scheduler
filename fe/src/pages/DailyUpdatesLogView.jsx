@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Clock, Plus, AlertTriangle, Calendar, Sparkles, CheckCircle2, XCircle, Edit3 } from 'lucide-react';
 
-const DailyUpdatesLogView = ({ openDailyUpdateModal }) => {
+const DailyUpdatesLogView = ({ openDailyUpdateModal, refreshKey }) => {
   const { user, hasPermission } = useAuth();
   const [updates, setUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ const DailyUpdatesLogView = ({ openDailyUpdateModal }) => {
 
   useEffect(() => {
     fetchUpdates();
-  }, [dateFilterMode, selectedDate]);
+  }, [dateFilterMode, selectedDate, refreshKey]);
 
   const fetchUpdates = async () => {
     setLoading(true);

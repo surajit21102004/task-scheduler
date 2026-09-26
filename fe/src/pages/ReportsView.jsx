@@ -18,14 +18,14 @@ import { BarChart3, Trophy, Search, CheckCircle2, Clock, Users, PieChart as PieI
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#64748b'];
 
-const ReportsView = () => {
+const ReportsView = ({ refreshKey }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchReports();
-  }, []);
+  }, [refreshKey]);
 
   const fetchReports = async () => {
     setLoading(true);

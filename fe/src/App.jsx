@@ -35,6 +35,10 @@ const MainApp = () => {
   const [isDailyUpdateModalOpen, setIsDailyUpdateModalOpen] = useState(false);
   const [selectedTaskForChat, setSelectedTaskForChat] = useState(null);
 
+  // Refresh key state for smooth, reload-free UI updates
+  const [refreshKey, setRefreshKey] = useState(0);
+  const triggerRefresh = () => setRefreshKey((prev) => prev + 1);
+
   const pathname = window.location.pathname;
   if (pathname === '/join') {
     return <JoinPage />;
@@ -83,6 +87,7 @@ const MainApp = () => {
         <main className="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full">
           {currentView === 'dashboard' && (
             <DashboardView
+              refreshKey={refreshKey}
               setCurrentView={setCurrentView}
               openDailyUpdateModal={() => setIsDailyUpdateModalOpen(true)}
             />
@@ -90,6 +95,7 @@ const MainApp = () => {
 
           {currentView === 'tasks' && (
             <TaskBoardView
+              refreshKey={refreshKey}
               openTaskModal={openTaskModal}
               setSelectedTaskForChat={(task) => setSelectedTaskForChat(task)}
               setSelectedTaskForDetail={(task) => setSelectedTaskForDetail(task)}
@@ -98,6 +104,7 @@ const MainApp = () => {
 
           {currentView === 'my-tasks' && (
             <TaskBoardView
+              refreshKey={refreshKey}
               isMyAssignedOnly={true}
               openTaskModal={openTaskModal}
               setSelectedTaskForChat={(task) => setSelectedTaskForChat(task)}
@@ -105,16 +112,17 @@ const MainApp = () => {
             />
           )}
 
-          {currentView === 'reports' && <ReportsView />}
+          {currentView === 'reports' && <ReportsView refreshKey={refreshKey} />}
 
           {currentView === 'hierarchy' && (
-            <OrgHierarchyView openInviteModal={() => setIsInviteModalOpen(true)} />
+            <OrgHierarchyView refreshKey={refreshKey} openInviteModal={() => setIsInviteModalOpen(true)} />
           )}
 
           {currentView === 'permissions' && <PermissionsMatrixView />}
 
           {currentView === 'updates' && (
             <DailyUpdatesLogView
+              refreshKey={refreshKey}
               openDailyUpdateModal={() => setIsDailyUpdateModalOpen(true)}
             />
           )}
@@ -130,14 +138,14 @@ const MainApp = () => {
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
         taskToEdit={taskToEdit}
-        onSave={() => window.location.reload()}
+        onSave={triggerRefresh}
       />
 
       <TaskDetailModal
         isOpen={!!selectedTaskForDetail}
         task={selectedTaskForDetail}
         onClose={() => setSelectedTaskForDetail(null)}
-        onTaskUpdated={() => window.location.reload()}
+        onTaskUpdated={triggerRefresh}
       />
 
       <InviteModal
@@ -148,7 +156,7 @@ const MainApp = () => {
       <DailyUpdateModal
         isOpen={isDailyUpdateModalOpen}
         onClose={() => setIsDailyUpdateModalOpen(false)}
-        onSubmitted={() => window.location.reload()}
+        onSubmitted={triggerRefresh}
       />
 
       <ChatDrawer

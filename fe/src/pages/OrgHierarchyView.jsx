@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import VirtualIdCardModal from '../components/VirtualIdCardModal';
 import { Network, Users, ChevronDown, ChevronRight, UserPlus, Building, Shield, CreditCard } from 'lucide-react';
 
-const OrgHierarchyView = ({ openInviteModal }) => {
+const OrgHierarchyView = ({ openInviteModal, refreshKey }) => {
   const { user, hasPermission } = useAuth();
   const [hierarchy, setHierarchy] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -14,7 +14,7 @@ const OrgHierarchyView = ({ openInviteModal }) => {
 
   useEffect(() => {
     fetchHierarchyData();
-  }, []);
+  }, [refreshKey]);
 
   const fetchHierarchyData = async () => {
     setLoading(true);

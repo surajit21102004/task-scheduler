@@ -19,11 +19,27 @@
       "dest": "/api/index.js"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/fe/assets/$1"
+    },
+    {
+      "src": "/logo.png",
+      "dest": "/fe/logo.png"
+    },
+    {
+      "src": "/favicon.svg",
+      "dest": "/fe/favicon.svg"
+    },
+    {
+      "src": "/icons.svg",
+      "dest": "/fe/icons.svg"
+    },
+    {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/fe/index.html"
     }
   ]
 }

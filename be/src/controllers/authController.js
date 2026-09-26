@@ -176,7 +176,7 @@ export const login = async (req, res, next) => {
 
     const { data: employee, error } = await supabase
       .from('employees')
-      .select('*, company:companies(*), department:departments(*), position:positions(*)')
+      .select('*, company:companies!company_id(*), department:departments!department_id(*), position:positions!position_id(*)')
       .eq('email', email.toLowerCase().trim())
       .maybeSingle();
 

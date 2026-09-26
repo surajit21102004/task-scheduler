@@ -46,7 +46,9 @@ const RegisterPage = ({ onNavigateLogin }) => {
         password,
       });
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Please check inputs.');
+      const rawErr = err.response?.data?.error || err.response?.data?.message || err.message;
+      const displayErr = typeof rawErr === 'string' ? rawErr : (rawErr?.message || 'Registration failed. Please check inputs.');
+      setError(displayErr);
     } finally {
       setLoading(false);
     }

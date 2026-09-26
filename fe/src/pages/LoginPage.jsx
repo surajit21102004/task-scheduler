@@ -17,7 +17,9 @@ const LoginPage = ({ onNavigateRegister }) => {
     try {
       await login(email, password);
     } catch (err) {
-      setError(err.response?.data?.error || 'Invalid credentials or connection error.');
+      const rawErr = err.response?.data?.error || err.response?.data?.message || err.message;
+      const displayErr = typeof rawErr === 'string' ? rawErr : (rawErr?.message || 'Invalid credentials or server connection error.');
+      setError(displayErr);
     } finally {
       setLoading(false);
     }

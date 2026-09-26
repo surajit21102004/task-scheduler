@@ -31,7 +31,9 @@ const JoinPage = () => {
       setInvitation(res.data.invitation);
       setName(res.data.invitation.name || '');
     } catch (err) {
-      setError(err.response?.data?.error || 'Invitation is invalid or has expired.');
+      const rawErr = err.response?.data?.error || err.response?.data?.message || err.message;
+      const displayErr = typeof rawErr === 'string' ? rawErr : (rawErr?.message || 'Invitation is invalid or has expired.');
+      setError(displayErr);
     } finally {
       setLoading(false);
     }
@@ -55,7 +57,9 @@ const JoinPage = () => {
       });
       window.location.href = '/';
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to complete registration.');
+      const rawErr = err.response?.data?.error || err.response?.data?.message || err.message;
+      const displayErr = typeof rawErr === 'string' ? rawErr : (rawErr?.message || 'Failed to complete registration.');
+      setError(displayErr);
     } finally {
       setSubmitting(false);
     }

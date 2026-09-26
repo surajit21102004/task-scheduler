@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import supabase from '../config/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { X, Send, MessageSquare, Trash2 } from 'lucide-react';
@@ -15,6 +16,48 @@ const ChatDrawer = ({ task, onClose }) => {
     if (task) {
       fetchTaskComments();
     }
+  }, [task]);
+
+  // Realtime WebSocket Subscription for task discussion comments
+  useEffect(() => {
+    if (!task) return;
+
+    const channel = supabase
+      .channel(`task_comments_${task.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'workplace_messages',
+          filter: `task_id=eq.${task.id}`,
+        },
+        (payload) => {
+          const newMsg = payload.new;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'workplace_messages',
+          filter: `task_id=eq.${task.id}`,
+        },
+        (payload) => {
+          const deletedId = payload.old.id;
+          setMessages((prev) => prev.filter((m) => m.id !== deletedId));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [task]);
 
   const fetchTaskComments = async () => {

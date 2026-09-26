@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import supabase from '../config/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Send, User, Trash2, ShieldAlert, Sparkles, MessageSquareX } from 'lucide-react';
@@ -24,6 +25,51 @@ const WorkplaceMessagesView = () => {
       fetchDirectMessages(selectedUser.id);
     }
   }, [selectedUser]);
+
+  // Realtime WebSocket Subscription for instant direct messaging
+  useEffect(() => {
+    if (!selectedUser || !user) return;
+
+    const channel = supabase
+      .channel(`direct_messages_${user.id}_${selectedUser.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'workplace_messages',
+        },
+        (payload) => {
+          const newMsg = payload.new;
+          if (
+            (newMsg.sender_id === user.id && newMsg.receiver_id === selectedUser.id) ||
+            (newMsg.sender_id === selectedUser.id && newMsg.receiver_id === user.id)
+          ) {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg];
+            });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'workplace_messages',
+        },
+        (payload) => {
+          const deletedId = payload.old.id;
+          setMessages((prev) => prev.filter((m) => m.id !== deletedId));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedUser, user]);
 
   const fetchEmployees = async () => {
     try {

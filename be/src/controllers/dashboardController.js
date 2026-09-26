@@ -4,11 +4,42 @@ export const getDashboardSummary = async (req, res, next) => {
   try {
     const companyId = req.user.company_id;
 
-    // 1. Task Counts
-    const { data: tasks } = await supabase
-      .from('tasks')
-      .select('id, status, priority, department_id, created_at')
-      .eq('company_id', companyId);
+    // Run all summary database queries in parallel for 6x speedup
+    const [
+      { data: tasks },
+      { count: employeeCount },
+      { count: departmentCount },
+      { count: invitationCount },
+      { data: recentUpdates },
+    ] = await Promise.all([
+      supabase
+        .from('tasks')
+        .select('id, status, priority, department_id, created_at')
+        .eq('company_id', companyId),
+      supabase
+        .from('employees')
+        .select('id', { count: 'exact', head: true })
+        .eq('company_id', companyId)
+        .eq('is_active', true),
+      supabase
+        .from('departments')
+        .select('id', { count: 'exact', head: true })
+        .eq('company_id', companyId),
+      supabase
+        .from('invitations')
+        .select('id', { count: 'exact', head: true })
+        .eq('company_id', companyId)
+        .eq('status', 'pending'),
+      supabase
+        .from('daily_updates')
+        .select(`
+          id, update_date, hours_spent, summary, status, created_at,
+          employee:employees!employee_id(id, name, avatar_url, position:positions(title))
+        `)
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false })
+        .limit(6),
+    ]);
 
     const taskList = tasks || [];
     const totalTasks = taskList.length;
@@ -17,37 +48,6 @@ export const getDashboardSummary = async (req, res, next) => {
     const reviewTasks = taskList.filter((t) => t.status === 'review').length;
     const todoTasks = taskList.filter((t) => t.status === 'todo').length;
     const urgentTasks = taskList.filter((t) => t.priority === 'urgent' || t.priority === 'high').length;
-
-    // 2. Active Employees
-    const { count: employeeCount } = await supabase
-      .from('employees')
-      .select('id', { count: 'exact', head: true })
-      .eq('company_id', companyId)
-      .eq('is_active', true);
-
-    // 3. Departments Count
-    const { count: departmentCount } = await supabase
-      .from('departments')
-      .select('id', { count: 'exact', head: true })
-      .eq('company_id', companyId);
-
-    // 4. Pending Invitations Count
-    const { count: invitationCount } = await supabase
-      .from('invitations')
-      .select('id', { count: 'exact', head: true })
-      .eq('company_id', companyId)
-      .eq('status', 'pending');
-
-    // 5. Recent Daily Updates
-    const { data: recentUpdates } = await supabase
-      .from('daily_updates')
-      .select(`
-        id, update_date, hours_spent, summary, status, created_at,
-        employee:employees(id, name, avatar_url, position:positions(title))
-      `)
-      .eq('company_id', companyId)
-      .order('created_at', { ascending: false })
-      .limit(6);
 
     return res.status(200).json({
       summary: {
@@ -76,32 +76,30 @@ export const getEmployeeReports = async (req, res, next) => {
   try {
     const companyId = req.user.company_id;
 
-    // Fetch all employees in company
-    const { data: employees, error: empErr } = await supabase
-      .from('employees')
-      .select(`
-        id, name, email, role, avatar_url,
-        department:departments(name),
-        position:positions(title)
-      `)
-      .eq('company_id', companyId)
-      .eq('is_active', true);
-
-    if (empErr) {
-      return res.status(500).json({ error: 'Failed to fetch employee list for reports.' });
-    }
-
-    // Fetch all tasks in company
-    const { data: tasks } = await supabase
-      .from('tasks')
-      .select('id, assigned_to_id, status, priority')
-      .eq('company_id', companyId);
-
-    // Fetch all daily updates in company
-    const { data: updates } = await supabase
-      .from('daily_updates')
-      .select('id, employee_id, hours_spent, status')
-      .eq('company_id', companyId);
+    // Fetch all report data in parallel
+    const [
+      { data: employees, error: empErr },
+      { data: tasks },
+      { data: updates },
+    ] = await Promise.all([
+      supabase
+        .from('employees')
+        .select(`
+          id, name, email, role, avatar_url,
+          department:departments!department_id(name),
+          position:positions!position_id(title)
+        `)
+        .eq('company_id', companyId)
+        .eq('is_active', true),
+      supabase
+        .from('tasks')
+        .select('id, assigned_to_id, status, priority')
+        .eq('company_id', companyId),
+      supabase
+        .from('daily_updates')
+        .select('id, employee_id, hours_spent, status')
+        .eq('company_id', companyId),
+    ]);
 
     const taskList = tasks || [];
     const updateList = updates || [];

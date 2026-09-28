@@ -37,14 +37,17 @@ const VirtualIdCardModal = ({ isOpen, onClose, targetUser }) => {
         </div>
 
         {/* CARD CONTAINER WITH FLIP TRANSITION */}
-        <div className="w-full max-w-sm perspective-1000 my-2">
+        <div className="w-full max-w-sm my-2" style={{ perspective: '1000px' }}>
           <div
-            className={`w-full rounded-2xl border border-slate-200 shadow-xl overflow-hidden transition-all duration-500 bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 text-white relative ${
-              isFlipped ? 'rotate-y-180' : ''
-            }`}
+            className="w-full rounded-2xl border border-slate-700 shadow-xl overflow-hidden bg-gradient-to-b from-slate-900 via-blue-950 to-slate-900 text-white relative"
+            style={{
+              transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+              transformStyle: 'preserve-3d',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
           >
             {/* Holographic Security Overlay strip */}
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-blue-500 via-teal-400 to-indigo-500"></div>
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-blue-500 via-teal-400 to-indigo-500 z-10"></div>
 
             {!isFlipped ? (
               /* FRONT OF ID CARD */
@@ -110,8 +113,11 @@ const VirtualIdCardModal = ({ isOpen, onClose, targetUser }) => {
                 </div>
               </div>
             ) : (
-              /* BACK OF ID CARD */
-              <div className="p-5 flex flex-col justify-between space-y-4 text-xs bg-slate-900 min-h-[300px]">
+              /* BACK OF ID CARD (Counter-rotated 180deg so text renders left-to-right) */
+              <div
+                className="p-5 flex flex-col justify-between space-y-4 text-xs bg-slate-900 min-h-[320px]"
+                style={{ transform: 'rotateY(180deg)' }}
+              >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-white/10">
                     <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Card Metadata</span>
